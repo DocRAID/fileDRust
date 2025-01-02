@@ -1,0 +1,11 @@
+[source]
+working_dir = "./"
+allow_delete = false
+pending_delete_time = ""
+path_list = [""]
+
+[target]
+target_ip = ""
+user_password = ""
+target_password = ""
+target_working_dir = ""
