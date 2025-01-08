@@ -1,11 +1,12 @@
 [source]
 working_dir = "./"
-allow_delete = false
+reflect_temporary_file = false
+reflect_delete = false
 pending_delete_time = ""
 path_list = [""]
 
 [target]
 target_ip = ""
-user_password = ""
+target_user = ""
 target_password = ""
 target_working_dir = ""

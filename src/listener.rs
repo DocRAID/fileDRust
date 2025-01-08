@@ -1,20 +1,24 @@
 use std::path::Path;
-use notify::{Event, RecursiveMode, Result, Watcher};
+use notify::{Event, EventKind, RecursiveMode, Result, Watcher};
 use std::sync::mpsc;
+use std::sync::mpsc::Sender;
+use crate::configure::SourceConfig;
 
 enum ActionDetermine {
     CreateFile,
     CreateDir,
 
-    RemoveFile,
-    RemoveDir,
+    Remove,
 
     ModifyFile,
-    ModifyDir,
-    ModifyName
+
+    RenameDir,
+    RenameFile,
+
+    Unknown
 }
-pub fn listner(path: &str) -> Result<()> {
-    let (tx, rx) = mpsc::channel::<notify::Result<Event>>();
+pub fn listner(path: &str, config:SourceConfig) -> Result<()> {
+    let (tx, rx) = mpsc::channel::<Result<Event>>();
 
     let mut watcher = notify::recommended_watcher(tx)?;
 
@@ -23,8 +27,30 @@ pub fn listner(path: &str) -> Result<()> {
     for res in rx {
         match res {
             Ok(event) => {
+
                 println!("event: {:?}", event);
-                //todo ActionDetermine.
+                let is_reflect = event.paths.last()
+                    .and_then(|path| path.file_name())
+                    .map(|name| name.as_encoded_bytes().starts_with(b"~") || name.as_encoded_bytes().ends_with(b"~"))
+                    .expect("No file name found.");
+
+                if !(!config.reflect_temporary_file && is_reflect) {  //임시파일 적용 여부 확인
+                    match event.kind {
+                        EventKind::Create(_) => {
+
+                        }
+                        EventKind::Modify(_) => {
+
+                        }
+                        EventKind::Remove(_) => {
+
+                        }
+                        _=>{}
+                        // EventKind::Access(_) => {}
+                        // EventKind::Any => {}
+                        // EventKind::Other => {}
+                    }
+                }
             },
             Err(e) => println!("watch error: {:?}", e),
         }

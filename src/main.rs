@@ -11,18 +11,17 @@ use crate::listener::listner;
 use crate::logging::log_init;
 
 fn main() -> Result<()> {
-    let config = match get_config() {
+    let config:configure::Config = match get_config() {
         Ok(conf) => {conf}
         Err(_) => {
             panic!("config error.");
         }
     };
-    let _log_handle = log_init("log/fileDRust.log".parse().unwrap());
+    let _log_handle = log_init(r"log/fileDRust.log".parse().unwrap());
     info!("fileDRust agent started.");
-    // println!("{:?}",config);
 
     // export to process
-    let _ = listner("./test");
+    let _ = listner("./test",config.source);
     controler();
 
     // monitor process?

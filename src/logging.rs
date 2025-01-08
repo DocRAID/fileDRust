@@ -3,7 +3,7 @@ use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::encode::pattern::PatternEncoder;
-use log4rs::config::{Appender, Config, Logger, Root};
+use log4rs::config::{Appender, Config, Root};
 
 pub fn log_init(path_buf: PathBuf) -> log4rs::Handle {
     let stdout = ConsoleAppender::builder()
@@ -33,5 +33,5 @@ pub fn log_init(path_buf: PathBuf) -> log4rs::Handle {
         )
         .unwrap();
 
-    return log4rs::init_config(config).expect("log setting failed");
+    log4rs::init_config(config).expect("log setting failed")
 }
