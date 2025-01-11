@@ -1,6 +1,6 @@
 use std::path::Path;
 use notify::{Event, EventKind, RecursiveMode, Result, Watcher};
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 use std::sync::mpsc::Sender;
 use crate::configure::SourceConfig;
 
@@ -17,7 +17,7 @@ enum ActionDetermine {
 
     Unknown
 }
-pub fn listner(path: &str, config:SourceConfig) -> Result<()> {
+pub fn listner(path: &str, config:Arc<SourceConfig>) -> Result<()> {
     let (tx, rx) = mpsc::channel::<Result<Event>>();
 
     let mut watcher = notify::recommended_watcher(tx)?;
@@ -27,14 +27,14 @@ pub fn listner(path: &str, config:SourceConfig) -> Result<()> {
     for res in rx {
         match res {
             Ok(event) => {
-
                 println!("event: {:?}", event);
-                let is_reflect = event.paths.last()
+
+                let is_temp_file = event.paths.last()
                     .and_then(|path| path.file_name())
                     .map(|name| name.as_encoded_bytes().starts_with(b"~") || name.as_encoded_bytes().ends_with(b"~"))
                     .expect("No file name found.");
 
-                if !(!config.reflect_temporary_file && is_reflect) {  //임시파일 적용 여부 확인
+                if !(!config.reflect_temporary_file && is_temp_file) {  //임시파일 적용 여부 확인
                     match event.kind {
                         EventKind::Create(_) => {
 
@@ -58,3 +58,4 @@ pub fn listner(path: &str, config:SourceConfig) -> Result<()> {
 
     Ok(())
 }
+
