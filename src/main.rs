@@ -3,22 +3,22 @@ mod controler;
 mod listener;
 mod logging;
 
-use std::path::Path;
-use std::sync::{Arc, mpsc};
-use std::sync::mpsc::RecvError;
-use std::thread;
+use crate::configure::get_config;
+use crate::controler::controler;
+use crate::listener::{listner, FileAction};
+use crate::logging::log_init;
 use log::info;
 use notify::{Result, Watcher};
-use crate::configure::{get_config};
-use crate::controler::controler;
-use crate::listener::{FileAction, listner};
-use crate::logging::log_init;
+use std::path::Path;
+use std::sync::mpsc::RecvError;
+use std::sync::{mpsc, Arc};
+use std::{thread, time::Duration};
 
 fn main() -> Result<()> {
     let (action_sender, action_receiver) = mpsc::channel(); //이거 네이밍을 다르게 해보자.
 
-    let config:configure::Config = match get_config() {
-        Ok(conf) => {conf}
+    let config: configure::Config = match get_config() {
+        Ok(conf) => conf,
         Err(_) => {
             panic!("config error.");
         }
@@ -41,27 +41,25 @@ fn main() -> Result<()> {
         let dir = dir.clone().to_string();
         let source = Arc::clone(&source);
         handles.push(thread::spawn(move || {
-            listner(action_sender,&*dir, source).unwrap();
+            listner(action_sender, &*dir, source).unwrap();
         }));
     }
 
+    // controler();
+
     //test loop
     loop {
-        match action_receiver.recv() {
-            Ok(x) => {
-                println!("{:?}",x);
-            }
-            Err(_) => {}
+        if let Ok(x) = action_receiver.recv() {
+            println!("@testlog:{:?}", x);
         }
     }
 
-    controler();
-
-    for handle in handles {
-        handle.join().unwrap();
-    }
-
-    // monitor process?
+    ctrlc::set_handler(move || {
+        for handle in handles {
+            handle.join().unwrap();
+        }
+    })
+    .expect("Error setting Ctrl-C handler");
 
     Ok(())
 }
