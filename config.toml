@@ -3,10 +3,13 @@ working_dir = "./"
 reflect_temporary_file = false
 reflect_delete = false
 pending_delete_time = ""
-path_list = [""]
+path_list = ["./TEMP"]
 
 [target]
 target_ip = ""
 target_user = ""
 target_password = ""
 target_working_dir = ""
+
+[system]
+applier_thread = 1

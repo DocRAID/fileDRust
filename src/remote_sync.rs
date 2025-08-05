@@ -1,8 +1,10 @@
-use crate::configure::SourceConfig;
+use crate::configure::{Config, SourceConfig};
+use log::info;
 use notify::{Event, EventKind, RecursiveMode, Result, Watcher};
 use std::path::Path;
 use std::sync::mpsc::Sender;
 use std::sync::{mpsc, Arc};
+use std::thread;
 
 #[derive(Debug)]
 enum ActionDetermine {
@@ -24,11 +26,39 @@ pub struct FileAction {
     path: Box<Path>,
 }
 
-pub fn listner(
-    action_sender: Sender<FileAction>,
-    path: &str,
-    config: Arc<SourceConfig>,
-) -> Result<()> {
+pub fn remote_sync(config: Config) {
+    let (action_sender, action_receiver) = mpsc::channel(); //이거 네이밍을 다르게 해보자.
+    info!("fileDRust remote agent started.");
+
+    let mut handles = Vec::new();
+
+    let source = Arc::new(config.source.clone());
+    //source 측 감지 할 경로 리스트
+    let listen_path_list = config.source.path_list.clone().unwrap();
+
+    // path list 만큼 스레드 생성 후 변경 리스너 실행
+    for dir in listen_path_list {
+        let action_sender = action_sender.clone();
+        let dir = dir.clone().to_string();
+        let source = Arc::clone(&source);
+        handles.push(thread::spawn(move || {
+            listner(action_sender, &*dir, source).unwrap();
+        }));
+    }
+
+    loop {
+        if let Ok(x) = action_receiver.recv() {
+            println!("@testlog:{:?}", x);
+        }
+    }
+    // ctrlc::set_handler(move || {
+    //     //스레드 헨들 회수
+    //     for handle in handles {
+    //         handle.join().unwrap();
+    //     }
+    // }).expect("Error setting Ctrl-C handler");
+}
+fn listner(action_sender: Sender<FileAction>, path: &str, config: Arc<SourceConfig>) -> Result<()> {
     let (tx, rx) = mpsc::channel::<Result<Event>>();
 
     let mut watcher = notify::recommended_watcher(tx)?;
@@ -88,4 +118,13 @@ pub fn listner(
     }
 
     Ok(())
+}
+
+fn controller() {
+    //     todo: 하나의 프로세서로 분리.
+    //     todo: 외부 서버 연결
+    //     todo: create 적용
+    //     todo: modify 업데이트
+    //     todo: modify name 업데이트
+    //     todo: 설정에 따라 delete 리스트 queue에서 관리하여 삭제
 }
