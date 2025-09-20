@@ -2,7 +2,6 @@ use log::trace;
 use serde::Deserialize;
 use std::option::Option;
 use std::{env, fs};
-use toml::de::Error;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {

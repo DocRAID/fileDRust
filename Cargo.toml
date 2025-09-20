@@ -18,3 +18,6 @@ toml = "0.8.19"
 interprocess = { version = "2.2.2", features = ["tokio"] }
 tokio = { version = "1.43.0", features = ["full"] }
 ctrlc = "3.4.7"
+ssh2 = "0.9.5"
+futures = { version = "0.3.31", features = ["thread-pool"] }
+threadpool = "1.8.1"

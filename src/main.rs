@@ -8,7 +8,7 @@ use crate::configure::{get_config, Config};
 use crate::local_recovery::{perform_backup, perform_restore};
 use crate::logging::log_init;
 use crate::remote_sync::{remote_sync, FileAction};
-use chrono::Local;
+use chrono::{Datelike, Local, Timelike};
 use clap::builder::TypedValueParser;
 use clap::{Parser, Subcommand};
 use log::{info, log, trace, warn};
@@ -56,6 +56,10 @@ enum Commands {
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
     let _log_handle = log_init(r"log/fileDRust.log".parse().unwrap());
+    trace!("=============== [ Start at : {}-{}-{} {}:{}:{} ] ================",
+        Local::now().year(), Local::now().month(), Local::now().day(),
+        Local::now().hour(), Local::now().minute(), Local::now().second());
+
     info!("fileDRust started.");
     trace!("{:?}", &cli);
     let (action_sender, action_receiver) = mpsc::channel::<FileAction>();
@@ -79,6 +83,10 @@ fn main() -> io::Result<()> {
                 }
             };
             let targets = targets.unwrap_or_default();
+            if targets.is_empty() {
+                warn!("백업 대상 디렉토리가 지정되지 않았습니다.");
+                exit(0);
+            }
             if targets.len() == 1 {
                 warn!("Warning: 대상 디렉토리는 2개 이상을 권고합니다.");
             }
@@ -90,7 +98,7 @@ fn main() -> io::Result<()> {
         } => {
             perform_restore(backup_path, restore_to)?;
         }
-        Commands::Sync {} => match config {
+        Commands::Sync => match config {
             None => {
                 info!("config.toml 설정파일이 없습니다.");
                 exit(0);
